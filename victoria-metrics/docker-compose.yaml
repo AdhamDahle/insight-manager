@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics
+    container_name: victoria-metrics
+    ports:
+      - "8428:8428"
+    volumes:
+      - vm-data:/storage
+    restart: always
+    command:
+      - "-storageDataPath=/storage"
+      - "-retentionPeriod=30d"
+      - "-dedup.minScrapeInterval=0s"  # <== Force immediate metric processing
+      - "-search.disableCache=true"    # <== Disable query cache for real-time data
+
+volumes:
+  vm-data:
+
