@@ -6,6 +6,7 @@ import com.bmc.insight_manager.service.MetricsStorageService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -26,9 +27,11 @@ import java.time.Instant;
 public class VictoriaMetricsStorageServiceImpl implements MetricsStorageService {
 
     private static final Logger logger = LoggerFactory.getLogger(VictoriaMetricsStorageServiceImpl.class);
-    private static final String VM_URL = "http://localhost:8428/api/v1/import/prometheus";
 
     private final RestTemplate restTemplate;
+
+    @Value("${victoriametrics.url}")
+    private String VM_URL;
 
     /**
      * Stores an insight in VictoriaMetrics.
@@ -38,7 +41,6 @@ public class VictoriaMetricsStorageServiceImpl implements MetricsStorageService 
      * @throws HttpClientErrorException   If there is a client-side error (4xx status codes).
      * @throws HttpServerErrorException   If there is a server-side error (5xx status codes).
      * @throws ResourceAccessException    If there is a connectivity issue.
-     * @throws Exception                  For any other unexpected errors.
      */
     @Override
     public void storeInsight(Insight insight, InsightConfiguration insightConfiguration) {

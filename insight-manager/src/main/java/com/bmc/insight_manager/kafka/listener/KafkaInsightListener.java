@@ -41,7 +41,7 @@ public class KafkaInsightListener {
             logger.error("Failed to parse JSON message: {}", record.value(), ex);
         } catch (Exception ex) {
             logger.error("Unhandled exception in Kafka listener: {}", ex.getMessage(), ex);
-            throw ex;  // Let Kafka retry or send to DLT
+            throw ex;
         }
     }
 
