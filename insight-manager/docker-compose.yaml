@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   insight-manager:
-    image: adhali/714/insight-manager:latest
+    image: adahli714/insight-manager:latest
     container_name: insight-manager
     restart: unless-stopped
     ports:
