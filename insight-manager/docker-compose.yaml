@@ -1,66 +1,117 @@
 version: '3.8'
 
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_DATABASE: "mydatabase"
+      MYSQL_USER: "appuser"
+      MYSQL_PASSWORD: "appuser_password"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - insight-network
+
+  kafka-1:
+    image: bitnami/kafka:latest
+    container_name: kafka-1
+    restart: always
+    environment:
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_KRAFT_CLUSTER_ID=43ca41bf-3c8c-4af8-8873-8988ecbb990c
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka-1:9091
+      # Define two listeners: one for client (PLAINTEXT) and one for internal controller communications.
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9090,CONTROLLER://:9091
+      # Advertise only the PLAINTEXT listener so that containers use kafka-1:9090
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka-1:9090
+      # Define security protocols for both listeners
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    ports:
+      - "9092:9090"  # Exposes the PLAINTEXT listener on external port 9092, if needed.
+    volumes:
+      - kafka_data:/bitnami/kafka
+    networks:
+      - insight-network
+
+  victoria-metrics:
+    image: victoriametrics/victoria-metrics:latest
+    container_name: victoria-metrics
+    restart: always
+    ports:
+      - "8428:8428"
+    volumes:
+      - vm-data:/storage
+    command:
+      - "-storageDataPath=/storage"
+      - "-retentionPeriod=30d"
+      - "-dedup.minScrapeInterval=0s"
+      - "-search.disableCache=true"
+    networks:
+      - insight-network
+
   insight-manager:
     image: adahli714/insight-manager:latest
     container_name: insight-manager
     restart: unless-stopped
     ports:
-      - "8088:8088"   # Expose Spring Boot server port
-      - "5005:5005"   # Expose debug port for remote debugging
+      - "8088:8088"   # Application port
+      - "5005:5005"   # Remote debugging port
     environment:
-      # Application properties
       SPRING_APPLICATION_NAME: "insight-manager"
       SERVER_PORT: "8088"
       DEBUG: "true"
 
-      # Kafka Producer
-      SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: "localhost:9092"
+      # Kafka configuration: point to kafka-1's PLAINTEXT listener (port 9090)
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:9090"
       SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: "org.apache.kafka.common.serialization.StringSerializer"
       SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: "org.springframework.kafka.support.serializer.JsonSerializer"
-
-      # Kafka Consumer
-      SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: "localhost:9092"
       SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
       SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
       SPRING_KAFKA_CONSUMER_GROUP_ID: "insight-created-event"
       KAFKA_TOPIC_INSIGHT_CREATED: "insight-created-event-topic-2"
       KAFKA_GROUP_ID: "insight-created-event"
 
-      # Database Config
-      SPRING_DATASOURCE_URL: "jdbc:mysql://localhost:3306/mydatabase"
-      SPRING_DATASOURCE_USERNAME: "root"
-      SPRING_DATASOURCE_PASSWORD: "password"
+      # Database configuration (using the MySQL service name)
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/mydatabase"
+      SPRING_DATASOURCE_USERNAME: "appuser"
+      SPRING_DATASOURCE_PASSWORD: "appuser_password"
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: "com.mysql.cj.jdbc.Driver"
       SPRING_JPA_DATABASE_PLATFORM: "org.hibernate.dialect.MySQL8Dialect"
       SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
 
-      # Victoria Metrics
-      VICTORIAMETRICS_URL: "http://localhost:8428/api/v1/import/prometheus"
+      # VictoriaMetrics configuration (using the service name)
+      VICTORIAMETRICS_URL: "http://victoria-metrics:8428/api/v1/import/prometheus"
 
-      # Security
+      # Security credentials
       SPRING_SECURITY_USER_NAME: "admin"
       SPRING_SECURITY_USER_PASSWORD: "password"
       SPRING_SECURITY_USER_ROLES: "ADMIN"
 
-      # Enable JVM remote debugging
+      # JVM remote debugging configuration
       JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     volumes:
-      - ./config:/app/config   # Adjust paths as needed
+      - ./config:/app/config
       - ./logs:/app/logs
     networks:
       - insight-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8088/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    depends_on:
+      - mysql
+      - kafka-1
+      - victoria-metrics
 
 networks:
   insight-network:
     driver: bridge
+
+volumes:
+  mysql_data:
+  kafka_data:
+  vm-data:
