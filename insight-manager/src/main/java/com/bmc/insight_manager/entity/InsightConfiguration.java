@@ -28,15 +28,15 @@ public class InsightConfiguration {
     private Long id;
 
     @Column(name = "insight_type_name", unique = true, nullable = false)
-    @Schema(description = "Name of the insight type", example = "error", required = true)
+    @Schema(description = "Name of the insight type", example = "error", requiredMode = Schema.RequiredMode.REQUIRED)
     private String insightTypeName;
 
     @Column(name = "insight_consumed", nullable = false)
-    @Schema(description = "Number of insights consumed", example = "5", required = true)
+    @Schema(description = "Number of insights consumed", example = "5", requiredMode = Schema.RequiredMode.REQUIRED)
     private int insightConsumed = 0;
 
     @Column(name = "time_saved", nullable = false)
-    @Schema(description = "Time saved in minutes", example = "10", required = true)
+    @Schema(description = "Time saved in minutes", example = "10", requiredMode = Schema.RequiredMode.REQUIRED)
     private int timeSaved = 0;
 
     @Column(name = "created_date", updatable = false, nullable = false)

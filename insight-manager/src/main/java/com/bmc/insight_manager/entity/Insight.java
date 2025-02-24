@@ -18,17 +18,17 @@ public class Insight {
 
     @JsonProperty("type")
     @NotEmpty(message = "Type can not be empty")
-    @Schema(description = "Type of the insight")
+    @Schema(description = "Type of the insight", requiredMode = Schema.RequiredMode.REQUIRED)
     private String type;
 
     @NotEmpty(message = "tenantId can not be empty")
     @JsonProperty("tenantId")
-    @Schema(description = "Tenant identifier")
+    @Schema(description = "Tenant identifier", requiredMode = Schema.RequiredMode.REQUIRED)
     private String tenantId;
 
     @NotEmpty(message = "createdAt can not be empty")
     @JsonProperty("createdAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    @Schema(description = "Timestamp when the insight was created", example = "2023-10-12T08:30:00")
+    @Schema(description = "Timestamp when the insight was created", requiredMode = Schema.RequiredMode.REQUIRED, example = "2023-10-12T08:30:00")
     private LocalDateTime createdAt;
 }
