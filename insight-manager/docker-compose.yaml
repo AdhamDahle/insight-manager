@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  insight-manager:
+    image: adhali/714/insight-manager:latest
+    container_name: insight-manager
+    restart: unless-stopped
+    ports:
+      - "8088:8088"   # Expose Spring Boot server port
+      - "5005:5005"   # Expose debug port for remote debugging
+    environment:
+      # Application properties
+      SPRING_APPLICATION_NAME: "insight-manager"
+      SERVER_PORT: "8088"
+      DEBUG: "true"
+
+      # Kafka Producer
+      SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: "localhost:9092"
+      SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: "org.apache.kafka.common.serialization.StringSerializer"
+      SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: "org.springframework.kafka.support.serializer.JsonSerializer"
+
+      # Kafka Consumer
+      SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: "localhost:9092"
+      SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
+      SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
+      SPRING_KAFKA_CONSUMER_GROUP_ID: "insight-created-event"
+      KAFKA_TOPIC_INSIGHT_CREATED: "insight-created-event-topic-2"
+      KAFKA_GROUP_ID: "insight-created-event"
+
+      # Database Config
+      SPRING_DATASOURCE_URL: "jdbc:mysql://localhost:3306/mydatabase"
+      SPRING_DATASOURCE_USERNAME: "root"
+      SPRING_DATASOURCE_PASSWORD: "password"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "com.mysql.cj.jdbc.Driver"
+      SPRING_JPA_DATABASE_PLATFORM: "org.hibernate.dialect.MySQL8Dialect"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+
+      # Victoria Metrics
+      VICTORIAMETRICS_URL: "http://localhost:8428/api/v1/import/prometheus"
+
+      # Security
+      SPRING_SECURITY_USER_NAME: "admin"
+      SPRING_SECURITY_USER_PASSWORD: "password"
+      SPRING_SECURITY_USER_ROLES: "ADMIN"
+
+      # Enable JVM remote debugging
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    volumes:
+      - ./config:/app/config   # Adjust paths as needed
+      - ./logs:/app/logs
+    networks:
+      - insight-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  insight-network:
+    driver: bridge
