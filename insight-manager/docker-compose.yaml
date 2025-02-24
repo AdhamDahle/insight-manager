@@ -15,12 +15,12 @@ services:
       DEBUG: "true"
 
       # Kafka Producer
-      SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: "localhost:9092"
+      SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: "clm-tlv-vr6dtg:9092"
       SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: "org.apache.kafka.common.serialization.StringSerializer"
       SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: "org.springframework.kafka.support.serializer.JsonSerializer"
 
       # Kafka Consumer
-      SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: "localhost:9092"
+      SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: "clm-tlv-vr6dtg:9092"
       SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
       SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
       SPRING_KAFKA_CONSUMER_GROUP_ID: "insight-created-event"
@@ -28,7 +28,7 @@ services:
       KAFKA_GROUP_ID: "insight-created-event"
 
       # Database Config
-      SPRING_DATASOURCE_URL: "jdbc:mysql://localhost:3306/mydatabase"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://clm-tlv-vr6dtg:3306/mydatabase"
       SPRING_DATASOURCE_USERNAME: "root"
       SPRING_DATASOURCE_PASSWORD: "password"
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: "com.mysql.cj.jdbc.Driver"
@@ -36,7 +36,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
 
       # Victoria Metrics
-      VICTORIAMETRICS_URL: "http://localhost:8428/api/v1/import/prometheus"
+      VICTORIAMETRICS_URL: "http://clm-tlv-vr6dtg:8428/api/v1/import/prometheus"
 
       # Security
       SPRING_SECURITY_USER_NAME: "admin"
@@ -56,7 +56,7 @@ services:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8088/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://clm-tlv-vr6dtg:8088/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
